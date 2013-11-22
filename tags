@@ -1,0 +1,75 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+AN	sender.c	/^uint AN = 0; \/\/ next frame to be acknowledged$/;"	v
+BACKOFF_LIMIT_CROSSED	sock/data.c	10;"	d	file:
+BYTES	fops/fileop.c	3;"	d	file:
+CLIENT_PORT	sender.c	15;"	d	file:
+C_HEADERS	Makefile	/^C_HEADERS=sock\/csock.h sock\/data.h sock\/ssock.h$/;"	m
+C_OBJS	Makefile	/^C_OBJS=sock\/csock.o sock\/data.o fops\/fileop.o $/;"	m
+Create	fops/fileop.h	/^  Create$/;"	e	enum:__anon1
+EXEC_PATH	Makefile	/^EXEC_PATH=exec$/;"	m
+EXPAND_WIN	sender.c	18;"	d	file:
+FLAGS	Makefile	/^FLAGS=-g -Werror -DAPP -DGRAN1$/;"	m
+FLAGS	sock/Makefile	/^FLAGS=-DSOCK$/;"	m
+GCC	Makefile	/^GCC=gcc$/;"	m
+GCC	sock/Makefile	/^GCC=gcc$/;"	m
+HEADERS	sock/Makefile	/^HEADERS=csock.h ssock.h data.h$/;"	m
+HEADSIZE	config.h	4;"	d
+MAX_CONNECTIONS	sock/ssock.h	5;"	d
+MSS	config.h	7;"	d
+OBJS	sock/Makefile	/^OBJS=csock.o ssock.o data.o$/;"	m
+PLIB	Makefile	/^PLIB=-lpthread$/;"	m
+REC_OBJ	Makefile	/^REC_OBJ=receiver.o $/;"	m
+RN	receiver.c	/^uint RN; \/\/ receiver window variable$/;"	v
+Read	fops/fileop.h	/^  Read,$/;"	e	enum:__anon1
+ReadWrite	fops/fileop.h	/^  ReadWrite,$/;"	e	enum:__anon1
+SEN_OBJ	Makefile	/^SEN_OBJ=sender.o$/;"	m
+SEQBITS	config.h	2;"	d
+SERVER_ADDR	sender.c	13;"	d	file:
+SERVER_PORT	receiver.c	12;"	d	file:
+SERVER_PORT	sender.c	14;"	d	file:
+SF	sender.c	/^uint SF = 0; \/\/ first outstanding frame index$/;"	v
+SLIDE_WIN	receiver.c	13;"	d	file:
+SLIDE_WIN	sender.c	19;"	d	file:
+SN	sender.c	/^uint SN = 0; \/\/ next frame to be sent$/;"	v
+S_HEADERS	Makefile	/^S_HEADERS=sock\/ssock.h sock\/data.h $/;"	m
+S_OBJS	Makefile	/^S_OBJS=sock\/ssock.o sock\/data.o fops\/fileop.o $/;"	m
+TIMEOUT	sender.c	16;"	d	file:
+WINSIZE	config.h	6;"	d
+Write	fops/fileop.h	/^  Write,$/;"	e	enum:__anon1
+attachHeader	sender.c	/^void attachHeader(char segment[MSS], uint seq)$/;"	f
+attr	sender.c	/^pthread_attr_t attr;$/;"	v
+bind_sock	sock/csock.c	/^void bind_sock(int sock, int port, int timeout)$/;"	f
+bind_sock	sock/ssock.c	/^void bind_sock(int sock, int port)$/;"	f
+buffer	receiver.c	/^char *buffer;$/;"	v
+buffer	sender.c	/^char *buffer;$/;"	v
+close_sock	sock/data.c	/^void close_sock(int sock)$/;"	f
+error	sock/data.c	/^void error(char *msg)$/;"	f
+get_file_descriptor	fops/fileop.c	/^int get_file_descriptor(char *fname, int mode)$/;"	f
+get_sock	sock/data.c	/^int get_sock()$/;"	f
+goBackN	sender.c	/^void goBackN(int sock)$/;"	f
+isValid	receiver.c	/^int isValid(char segment[MSS])$/;"	f
+isValid	sender.c	/^int isValid(char segment[HEADSIZE])$/;"	f
+listen_sock	sock/ssock.c	/^void listen_sock(int sock)$/;"	f
+listener	sender.c	/^void *listener(void *arg)$/;"	f
+main	receiver.c	/^int main()$/;"	f
+main	sender.c	/^int main()$/;"	f
+mutex	sender.c	/^pthread_mutex_t mutex;$/;"	v
+output_to	fops/fileop.c	/^int output_to(int file, char *buffer, int buf_len)$/;"	f
+printWinStats	sender.c	/^void printWinStats()$/;"	f
+rdt_send	fops/fileop.c	/^char rdt_send(int fp)$/;"	f
+read_from	sock/data.c	/^int read_from(int sock, char *buffer, int buf_len, struct sockaddr_in *con_from)$/;"	f
+read_my_ip	sock/csock.c	/^void read_my_ip(char ip[50])$/;"	f
+removeHeader	receiver.c	/^void removeHeader(char segment[MSS])$/;"	f
+sendAck	receiver.c	/^void sendAck(int sock, char senderIP[50], int senderPort)$/;"	f
+sendSegment	sender.c	/^void sendSegment(int sock, char segment[MSS])$/;"	f
+storeSegment	receiver.c	/^void storeSegment(char segment[MSS])$/;"	f
+storeSegment	sender.c	/^void storeSegment(char segment[MSS])$/;"	f
+threads	sender.c	/^pthread_t threads;$/;"	v
+uint	config.h	/^typedef unsigned int uint;$/;"	t
+writeToFile	receiver.c	/^void writeToFile(int file, char segment[MSS])$/;"	f
+write_to	sock/data.c	/^int write_to(int sock, char *buffer, int buf_len, char *server_addr, int port)$/;"	f
