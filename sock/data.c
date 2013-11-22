@@ -24,7 +24,7 @@ int read_from(int sock, char *buffer, int buf_len, struct sockaddr_in *con_from)
   int bytes_read, client_len;
   struct sockaddr_in client;
 
-  bzero(buffer, buf_len);
+  memset(buffer, '\0', buf_len);
 
   client_len = sizeof(client);
 

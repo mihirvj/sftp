@@ -4,7 +4,7 @@
 #include<sys/socket.h>
 #include<netinet/in.h>
 #include<netdb.h>
-#include<strings.h>
+#include<string.h>
 #include<stdlib.h>
 
 void error(char *msg);

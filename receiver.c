@@ -23,6 +23,8 @@ void removeHeader(uchar segment[MSS])
 
 	for(i=0; i<MSS - HEADSIZE; i++)
 		segment[i] = segment[i + HEADSIZE];
+
+	segment[i] = '\0';
 }
 
 void storeSegment(uchar segment[MSS])
@@ -59,9 +61,9 @@ void sendAck(int sock, char senderIP[50], int senderPort)
 	write_to(sock, segment, HEADSIZE, senderIP, senderPort);
 }
 
-void writeToFile(int file, uchar segment[MSS])
+void writeToFile(int file, uchar segment[MSS], int buf_len)
 {
-	output_to(file, segment, MSS - HEADSIZE);
+	output_to(file, segment, buf_len);
 }
 
 int main()
@@ -70,7 +72,7 @@ int main()
 	uchar request[MSS], req_from[50];
 	struct sockaddr_in clientCon;
 	char ack[HEADSIZE];
-	int file, i;
+	int file, i, bytesRead;
 
 /*
 	|_|_|_(|_|)_|_|_|_|
@@ -91,7 +93,10 @@ int main()
 
 	while(1) // listen continuosly
 	{
-		read_from(sock, request, MSS, &clientCon);
+		bytesRead = read_from(sock, request, MSS, &clientCon);
+
+		if(strcmp(request, "<FINMJ>") == 0)
+			break;
 
 		sprintf(req_from, "%d.%d.%d.%d", (int)(clientCon.sin_addr.s_addr&0xFF),
     					(int)((clientCon.sin_addr.s_addr&0xFF00)>>8),
@@ -109,7 +114,7 @@ int main()
 		printf("%d, ", (int) request[i]);
 
 	for(i=4; i<MSS; i++)
-		printf("%c, ", request[i]);
+		printf("%c(%d), ", request[i], (int) request[i]);
 
 	printf("\n[/log]\n");
 #endif
@@ -124,7 +129,7 @@ int main()
 
 			sendAck(sock, req_from, in_port);
 
-			writeToFile(file, request);
+			writeToFile(file, request, bytesRead - HEADSIZE);
 
 			SLIDE_WIN();
 		}	

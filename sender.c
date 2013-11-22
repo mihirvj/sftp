@@ -30,8 +30,8 @@ void attachHeader(uchar segment[MSS], uint seq)
 	int i;
 
 // move segment downwards to make space for header
-	for(i=MSS-HEADSIZE;i>0;i--)
-		segment[i + HEADSIZE] = segment[i];
+	for(i=MSS-1;i>=HEADSIZE;i--)
+		segment[i] = segment[i - HEADSIZE];
 
 #ifdef GRAN1
 	printf("[log] adding seq no: %d\n", seq);
@@ -43,16 +43,14 @@ void attachHeader(uchar segment[MSS], uint seq)
 	segment[1] = (char) (seq >> 16) & 0xFF;
 	segment[0] = (char) (seq >> 24) & 0xFF;
 
-	segment[MSS] = '\0';
-
 #ifdef GRAN1
 	printf("[log] header attached segment: ");
 
-	for(i=0;i<4;i++)
+	for(i=0;i<HEADSIZE;i++)
 		printf("%d, ", (int) segment[i]);
 
-	for(i=4;i<MSS;i++)
-		printf("%c, ", segment[i]);
+	for(i=HEADSIZE;i<MSS;i++)
+		printf("%c(%d), ", segment[i], (int) segment[i]);
 
 	printf("\n");
 
@@ -71,9 +69,11 @@ void storeSegment(uchar segment[MSS])
 	}
 }
 
-void sendSegment(int sock, uchar segment[MSS])
+void sendSegment(int sock, uchar segment[MSS], int buf_len)
 {
-	write_to(sock, segment, MSS, SERVER_ADDR, SERVER_PORT);
+	segment[buf_len] = '\0';
+
+	write_to(sock, segment, buf_len, SERVER_ADDR, SERVER_PORT);
 }
 
 void *listener(void *arg);
@@ -119,6 +119,8 @@ int main()
 	pthread_mutex_init(&mutex, NULL);
 	pthread_create(&threads, &attr, &listener, &sock);
 
+	memset(segment, '\0', MSS);
+
 	while(1)
 	{
 		nextChar = rdt_send(file); // read next char
@@ -127,8 +129,24 @@ int main()
 	printf("[log] reading char: %c\n", nextChar);
 #endif
 
-		if((int) nextChar == 0) // nothing more to read.. phew!
+		if((int) nextChar == 0 && curIndex > 0) // nothing more to read.. phew!
+		{
+#ifdef GRAN1
+	printf("\nSending final segment at curIndex = %d\n", curIndex);
+#endif
+			// send final segment
+			attachHeader(segment, seqNo);
+
+			storeSegment(segment);
+
+			sendSegment(sock, segment, curIndex + HEADSIZE);
+
+			strcpy(segment, "<FINMJ>");
+
+			sendSegment(sock, segment, strlen(segment));
+
 			break;
+		}
 
 		while((SN - SF) >= WINSIZE) // wait while window iss full
 		{
@@ -141,7 +159,7 @@ int main()
 
 		segment[curIndex] = (int) nextChar; // add to buffer
 
-		if((curIndex % (MSS - HEADSIZE)) == 0 && curIndex > 0) // i've got 1 MSS data without header
+		if((curIndex % (MSS - HEADSIZE - 1)) == 0 && curIndex > 0) // i've got 1 MSS data without header
 		{
 			/****** Make Segment *******/
 
@@ -149,18 +167,13 @@ int main()
 
 			storeSegment(segment);
 
-			sendSegment(sock, segment);
-
-#ifdef APP
-	printf("[log] sending segment: %s\n", segment);
-#endif
+			sendSegment(sock, segment, MSS);
 
 			EXPAND_WIN();
 
 			printWinStats();
 
 #ifdef GRAN1
-//	getchar();
 	//if(seqNo > 1000)// || debug == 1)
 	{
 		sleep(1);
@@ -168,9 +181,16 @@ int main()
 	}
 #endif 
 			seqNo = (seqNo + MSS) % BUFSIZE;
-		}
+			curIndex = 0;
 
-		curIndex = (curIndex + 1) % MSS;
+			memset(segment, '\0', MSS);
+		}
+		else
+			curIndex = curIndex + 1;
+
+#ifdef GRAN1
+	printf("[log] cur index: %d\n", curIndex);
+#endif
 	}
 
 	close(file);
@@ -254,7 +274,7 @@ void goBackN(int sock)
 	{
 		if(prevIndex == 0 && count > SF) // do not consider first 
 		{
-			sendSegment(sock, segment);
+			sendSegment(sock, segment, MSS);
 #ifdef APP
 	printf("[log gobackn] sending segment: %s\n", segment);
 #endif
