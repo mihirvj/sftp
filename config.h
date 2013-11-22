@@ -4,6 +4,6 @@
 #define HEADSIZE 4 
 
 #define WINSIZE 256
-#define MSS 16
+#define MSS 32
 typedef unsigned int uint;
 typedef unsigned char uchar;

@@ -8,7 +8,7 @@ REC_OBJ=receiver.o
 EXEC_PATH=exec
 PLIB=-lpthread
 
-FLAGS=-g -Werror -DAPP -DGRAN1
+FLAGS=-g -Werror -DAPP -DDROP -DDELAY #-DGRAN1
 
 all: sender receiver
 	mv sock/*.o sock/objs/

@@ -13,7 +13,7 @@
 #define SERVER_ADDR "127.0.0.1"
 #define SERVER_PORT 7735
 #define CLIENT_PORT 12001
-#define TIMEOUT 5
+#define TIMEOUT 2
 
 #define EXPAND_WIN() SN = (SN + 1) % WINSIZE
 #define SLIDE_WIN() SF = (SF + 1) % WINSIZE; \
@@ -76,6 +76,24 @@ void sendSegment(int sock, uchar segment[MSS], int buf_len)
 	write_to(sock, segment, buf_len, SERVER_ADDR, SERVER_PORT);
 }
 
+void resetOutstandingPtr()
+{
+	uint seq;
+	
+	seq = (uint) buffer[SF];
+	seq = seq << 24;
+
+	seq = seq + (((uint) buffer[SF + 1]) << 16);
+	seq = seq + (((uint) buffer[SF + 2]) << 8);
+	seq = seq + ((uint) buffer[SF + 3]);
+
+	AN = seq;
+
+#ifdef APP
+	printf("[log] reset AN to: %d\n", AN);
+#endif
+}
+
 void *listener(void *arg);
 int isValid(uchar segment[HEADSIZE]);
 void goBackN(int sock);
@@ -85,13 +103,14 @@ pthread_attr_t attr;
 pthread_t threads;
 pthread_mutex_t mutex;
 
+uint seqNo = 0;
+
 int main()
 {
 	int sock;
 	uchar response[HEADSIZE], nextChar, segment[MSS];
 	int file, i;
 	int BUFSIZE = WINSIZE * MSS, curIndex = 0;
-	uint seqNo = 0;
 
 #ifdef APP
 	int debug = 0;
@@ -141,9 +160,7 @@ int main()
 
 			sendSegment(sock, segment, curIndex + HEADSIZE);
 
-			strcpy(segment, "<FINMJ>");
-
-			sendSegment(sock, segment, strlen(segment));
+			EXPAND_WIN();
 
 			break;
 		}
@@ -173,7 +190,7 @@ int main()
 
 			printWinStats();
 
-#ifdef GRAN1
+#ifdef DELAY
 	//if(seqNo > 1000)// || debug == 1)
 	{
 		sleep(1);
@@ -193,6 +210,12 @@ int main()
 #endif
 	}
 
+	pthread_join(threads, NULL);
+
+	strcpy(segment, "<FINMJ>");
+
+	sendSegment(sock, segment, strlen(segment));
+
 	close(file);
 	close_sock(sock);
 
@@ -211,6 +234,9 @@ void *listener(void *arg)
 	{
 		bytesRead = read_from(sock, response, HEADSIZE, &serverCon);
 
+		if((SN - SF) <= 0)
+			pthread_exit(NULL); // termintate if window is full
+
 		// timeout after TIMEOUT seconds
 		if(bytesRead < 0)
 		{
@@ -226,8 +252,6 @@ void *listener(void *arg)
 			if(isValid(response)) // check whether correct ack has been received
 			{
 				// purge frame and slide head pointer
-				printWinStats();
-
 				SLIDE_WIN();
 
 				printWinStats();
@@ -270,7 +294,9 @@ void goBackN(int sock)
 	int count = SF;
 	uchar segment[MSS];
 
-	for(count = SF; count < SN; count++)
+	//resetOutstandingPtr();
+
+	for(count = SF * MSS; count <= SN * MSS; count++)
 	{
 		if(prevIndex == 0 && count > SF) // do not consider first 
 		{
@@ -286,6 +312,7 @@ void goBackN(int sock)
 		
 		prevIndex = (prevIndex + 1) % MSS;
 	}
+
 }
 
 void printWinStats()

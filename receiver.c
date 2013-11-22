@@ -63,7 +63,21 @@ void sendAck(int sock, char senderIP[50], int senderPort)
 
 void writeToFile(int file, uchar segment[MSS], int buf_len)
 {
-	output_to(file, segment, buf_len);
+	int i, validCount = 0;
+
+	for(i=0; i<buf_len; i++)
+	{
+		if((int) segment[i] != 0)
+			validCount++;
+		else
+			break;
+	}
+
+#ifdef GRAN1
+	printf("[log] writing to file %d bytes\n", validCount);
+#endif
+
+	output_to(file, segment, validCount);
 }
 
 int main()
@@ -72,7 +86,7 @@ int main()
 	uchar request[MSS], req_from[50];
 	struct sockaddr_in clientCon;
 	char ack[HEADSIZE];
-	int file, i, bytesRead;
+	int file, i, bytesRead, packetCount = 0;
 
 /*
 	|_|_|_(|_|)_|_|_|_|
@@ -96,7 +110,12 @@ int main()
 		bytesRead = read_from(sock, request, MSS, &clientCon);
 
 		if(strcmp(request, "<FINMJ>") == 0)
+		{
+#ifdef APP
+	printf("<FINMJ> received\n");
+#endif
 			break;
+		}
 
 		sprintf(req_from, "%d.%d.%d.%d", (int)(clientCon.sin_addr.s_addr&0xFF),
     					(int)((clientCon.sin_addr.s_addr&0xFF00)>>8),
@@ -121,17 +140,29 @@ int main()
 		if(isValid(request))
 		{
 #ifdef APP
-	printf("[log] valid segment found\n");
+	printf("[log] valid segment found for seq no: %d\n", RN * MSS);
+#endif
+#ifdef DROP
+	if(packetCount % 3 != 0 && packetCount != 0)
+	{
+		sleep(2);
 #endif
 			removeHeader(request);
 
 			storeSegment(request);
 
 			sendAck(sock, req_from, in_port);
-
+			
 			writeToFile(file, request, bytesRead - HEADSIZE);
 
 			SLIDE_WIN();
+#ifdef DROP
+	}
+	else
+	{
+		printf("[drop log]\n-------------- dropping packet: %dat seq no: %d\n---------------\n", packetCount, RN * MSS);
+	}
+#endif
 		}	
 		else
 		{
@@ -142,6 +173,7 @@ int main()
 			// take no action. sliently discard
 		}
 
+		packetCount++;
 	}
 	
 	close_sock(sock);
