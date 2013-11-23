@@ -221,7 +221,9 @@ int main(int argc,char* argv[])
 
 	bind_sock(sock, CLIENT_PORT, TIMEOUT); // seconds timeout
 
-	file = get_file_descriptor("test/sending.txt", Read);
+
+	sprintf(FILE_NAME,"test/%s",argv[3]);
+	file = get_file_descriptor(FILE_NAME, Read);
 	
 	/***************** Go back N Algorithm **********/
 

@@ -106,7 +106,7 @@ int main(int argc,char* argv[])
 	
 
 	
-		
+	FILE_NAME=argv[1];	
 	WINSIZE=atoi(argv[2]);
 	MSS=atoi(argv[3])+HEADSIZE;	
 
@@ -129,7 +129,7 @@ int main(int argc,char* argv[])
 
 	sock = get_sock();
 
-	sprintf(FILE_NAME,"test/%s",argv[1])	
+
 	file = get_file_descriptor(FILE_NAME, Create);
 
 	bind_sock(sock, SERVER_PORT);

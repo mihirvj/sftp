@@ -194,7 +194,7 @@ int main(int argc,char* argv[])
 	
 	SERVER_ADDR=argv[1];
 	SERVER_PORT=atoi(argv[2]);
-
+	FILE_NAME=argv[3];
 	WINSIZE=atoi(argv[4]);
 	MSS=atoi(argv[5])+HEADSIZE;
 
@@ -222,7 +222,7 @@ int main(int argc,char* argv[])
 	bind_sock(sock, CLIENT_PORT, TIMEOUT); // seconds timeout
 
 
-	sprintf(FILE_NAME,"test/%s",argv[3]);
+
 	file = get_file_descriptor(FILE_NAME, Read);
 	
 	/***************** Go back N Algorithm **********/
