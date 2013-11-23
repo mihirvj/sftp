@@ -181,7 +181,7 @@ uint seqNo = 0;
 
 int main(int argc,char* argv[])
 {
-	/*if(argc!=6)
+	if(argc!=6)
 	{
 	printf("Wrong Number Argument");
 	return 1;
@@ -191,7 +191,7 @@ int main(int argc,char* argv[])
 	int SERVER_PORT=atoi(argv[2]);
 	char *FILE_NAME=argv[3];
 	int WINSIZE=atoi(argv[4]);
-	int MSS=atoi(argv[5]);*/
+	int MSS=atoi(argv[5]);
 	int sock;
 	uchar response[HEADSIZE], nextChar, segment[MSS];
 	int file, i;
