@@ -1,13 +1,11 @@
 /*****************************************************
                        csock.c
-           client socket implementations
+           client socket implementation
        Authors: Mihir Joshi, Fenil Kavathia
                      csc573 NCSU
 *****************************************************/
 
 #include "csock.h"
-
-
 
 void bind_sock(int sock, int port, int timeout)
 {

@@ -25,9 +25,13 @@ uint SN = 0; // next frame to be sent
 uint AN = 0; // next frame to be acknowledged
 uchar *buffer;
 
+
+usint cal_checksum(char buf[MSS],int length);
+
 void attachHeader(uchar segment[MSS], uint seq)
 {	
 	int i;
+	usint checksum;
 
 // move segment downwards to make space for header
 	for(i=MSS-1;i>=HEADSIZE;i--)
@@ -37,7 +41,17 @@ void attachHeader(uchar segment[MSS], uint seq)
 	printf("[log] adding seq no: %d\n", seq);
 #endif
 
+//calculating checksum
+	checksum=cal_checksum(segment,MSS-HEADSIZE);
+
 // prepend header length
+
+	segment[6]=0x55;
+	segment[7]=0x55;
+	segment[4]=(char)((checksum>>8)&0xFF);
+	segment[5]=(char)(checksum&0xFF);
+	
+
 	segment[3] = (char) seq & 0xFF;
 	segment[2] = (char) (seq >> 8) & 0xFF;
 	segment[1] = (char) (seq >> 16) & 0xFF;
@@ -57,6 +71,66 @@ void attachHeader(uchar segment[MSS], uint seq)
 //	printf("[log] header attached segment: %s\n", segment);
 #endif
 }
+
+usint cal_checksum(char buf[MSS],int length)
+{
+uint sum=0;
+usint checksum=0;
+usint word=0;
+int i;
+
+
+
+	printf("length is:%d",length);
+	if(length%2!=0)
+	{
+	#ifdef log
+	printf("padding is required\n");	
+	#endif
+
+	buf[length]=0;
+	length++;
+	
+	
+	}
+
+	for(i=HEADSIZE;i<MSS;i=i+2)
+	{
+	
+	word=buf[i];
+	word=(word<<8)+(buf[i+1]&0xFF);
+	sum=sum+word;
+	
+	}
+
+	
+	
+
+		
+
+	while(sum>>16)
+	{
+
+	sum= (sum&0XFFFF)+(sum>>16);	
+	
+	#ifdef log
+	printf("Adding Carry");
+	#endif
+
+	}
+
+	
+
+	
+	sum=~sum;
+	printf("your checksum is:%x\n",sum);
+	checksum=(usint)sum;
+	printf("your final checksum is:%x\n",checksum);
+	return checksum;
+	
+}
+
+
 
 void storeSegment(uchar segment[MSS])
 {

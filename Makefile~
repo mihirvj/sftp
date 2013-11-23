@@ -24,7 +24,7 @@ sender: ${C_OBJS} ${C_HEADERS}
 
 %.o: %.c ${C_HEADERS} ${S_HEADERS}
 	${GCC} -c $< -o $@ ${FLAGS}
-	@echo  $< "file"	
+	@echo  $< "file"
 clean: 
 	rm -f *.o
 	rm -r exec/*

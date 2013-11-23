@@ -16,6 +16,7 @@ uint RN; // receiver window variable
 char *buffer;
 
 int isValid(uchar segment[MSS]);
+usint cal_checksum(char buf[MSS],int length);
 
 void removeHeader(uchar segment[MSS])
 {
@@ -43,12 +44,19 @@ void sendAck(int sock, char senderIP[50], int senderPort)
 	int i;
 	uint ackNo = (RN * MSS);
 	uchar segment[HEADSIZE];
-
+	
+	segment[7]=0xAA;
+	segment[6]=0xAA;
+	segment[5]=0;
+	segment[4]=0;
 	segment[3] = ackNo & 0xFF;
 	segment[2] = (ackNo >> 8) & 0xFF;
 	segment[1] = (ackNo >> 16) & 0xFF;
 	segment[0] = (ackNo >> 24) & 0xFF;
 
+	
+	
+	
 #ifdef APP
 	printf("[log] ack sent for %d:\n", ackNo);
 
@@ -67,7 +75,7 @@ void writeToFile(int file, uchar segment[MSS], int buf_len)
 
 	for(i=0; i<buf_len; i++)
 	{
-		if((int) segment[i] != 0)
+		if((int) segment[i] != 0)  //ASK what's this
 			validCount++;
 		else
 			break;
@@ -184,6 +192,8 @@ int main()
 
 int isValid(uchar segment[MSS])
 {
+	usint r_checksum;
+	usint c_checksum;	
 	uint seqNo = 0;
 
 	seqNo = (uint) segment[0];
@@ -196,6 +206,71 @@ int isValid(uchar segment[MSS])
 #ifdef APP
 	printf("[log]received sequence number: %d\nexpected sequence number: %d\n[/log]\n", seqNo, RN * MSS);
 #endif
+	c_checksum = cal_checksum(segment,MSS-HEADSIZE)&0xFFFF;
 
-	return seqNo == (RN * MSS);
+	printf("\n----->calculated checksum:%x",c_checksum);
+
+	r_checksum = segment[4];
+	r_checksum=(segment[4]<<8)+(segment[5]&0xFF);
+	
+	printf("\n----->Recieved checksum:%x\n",r_checksum);
+	
+	//just for testing purpose
+	if( r_checksum == c_checksum){printf("checksum are equal\n");}
+	else{printf("OOPS..checksum are not equal\n");}
+
+
+
+	return (seqNo == (RN * MSS)) && (r_checksum == c_checksum);
 }
+
+usint cal_checksum(char buf[MSS],int length)
+{
+uint sum=0;
+usint checksum=0;
+usint word=0;
+int i;
+
+
+
+	printf("length is:%d",length);
+	if(length%2!=0)
+	{
+	#ifdef log
+	printf("padding is required\n");	
+	#endif
+
+	buf[length]=0;
+	length++;
+	
+	}
+
+	for(i=HEADSIZE;i<MSS;i=i+2)
+	{
+	
+	word=buf[i];
+	word=(word<<8)+(buf[i+1]&0xFF);
+	sum=sum+word;
+	
+	}
+
+
+	while(sum>>16)
+	{
+
+	sum= (sum&0XFFFF)+(sum>>16);	
+	
+	#ifdef log
+	printf("Adding Carry");
+	#endif
+
+	}
+	
+	sum=~sum;
+	printf("your checksum is:%x\n",sum);
+	checksum=(usint)sum;
+	printf("your final checksum is:%x\n",checksum);
+	return checksum;
+	
+}
+
