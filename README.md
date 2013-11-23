@@ -1,4 +1,1 @@
-sftp
-====
-
-simple ftp application
+This is a simple FTP application with Go-Back N protocol (To provide reliability) implemented with UDP protocol at transport level.This application is developed as a part of csc 573 (Internet Prtocol) course at NCSU. Feel free to add any functionalities. 
