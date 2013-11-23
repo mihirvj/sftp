@@ -10,8 +10,8 @@
 #include<pthread.h>
 #include "fops/fileop.h"
 
-#define SERVER_ADDR "127.0.0.1"
-#define SERVER_PORT 7735
+//#define SERVER_ADDR "127.0.0.1"
+//#define SERVER_PORT 7735
 #define CLIENT_PORT 12001
 #define TIMEOUT 2
 
@@ -25,6 +25,11 @@ uint SN = 0; // next frame to be sent
 uint AN = 0; // next frame to be acknowledged
 uchar *buffer;
 
+char *SERVER_ADDR;
+int SERVER_PORT;
+char *FILE_NAME;
+int WINSIZE;
+int MSS;
 
 usint cal_checksum(char buf[MSS],int length);
 
@@ -181,17 +186,18 @@ uint seqNo = 0;
 
 int main(int argc,char* argv[])
 {
-	/*if(argc!=6)
+	if(argc!=6)
 	{
 	printf("Wrong Number Argument");
 	return 1;
 	}	
 	
-	char *SERVER_ADDR=argv[1];
-	int SERVER_PORT=atoi(argv[2]);
-	char *FILE_NAME=argv[3];
-	int WINSIZE=atoi(argv[4]);
-	int MSS=atoi(argv[5]);*/
+	SERVER_ADDR=argv[1];
+	SERVER_PORT=atoi(argv[2]);
+
+	WINSIZE=atoi(argv[4]);
+	MSS=atoi(argv[5])+HEADSIZE;
+
 	int sock;
 	uchar response[HEADSIZE], nextChar, segment[MSS];
 	int file, i;
@@ -215,7 +221,9 @@ int main(int argc,char* argv[])
 
 	bind_sock(sock, CLIENT_PORT, TIMEOUT); // seconds timeout
 
-	file = get_file_descriptor("test/sending.txt", Read);
+
+	sprintf(FILE_NAME,"test/%s",argv[3]);
+	file = get_file_descriptor(FILE_NAME, Read);
 	
 	/***************** Go back N Algorithm **********/
 
