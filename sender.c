@@ -86,7 +86,10 @@ usint cal_checksum(char *buf,int length)
 	usint word=0;
 	int i;
 
+#ifdef GRAN1
 	printf("length is:%d",length);
+#endif
+
 	if(length%2!=0)
 	{
 #ifdef GRAN1
@@ -315,9 +318,9 @@ void *listener(void *arg)
 		// timeout after TIMEOUT seconds
 		if(bytesRead < 0)
 		{
-#ifdef APP
-	printf("[log] timer expired for sequence number: %d\n", AN);
-#endif
+
+			printf("timer expired for sequence number: %d\n", AN);
+
 			pthread_mutex_lock(&mutex);	
 			goBackN(sock);
 			pthread_mutex_unlock(&mutex);

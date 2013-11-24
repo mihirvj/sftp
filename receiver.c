@@ -8,6 +8,7 @@
 #include "sock/ssock.h"
 #include "config.h"
 #include "fops/fileop.h"
+#include<stdbool.h>
 
 //#define SERVER_PORT 7735
 #define SLIDE_WIN() RN = (RN + 1)
@@ -17,6 +18,7 @@ char *buffer;
 
 int isValid(uchar *segment);
 usint cal_checksum(uchar *buf,int length);
+bool canDrop(int packetId, int probLoss);
 
 void removeHeader(uchar *segment)
 {
@@ -175,30 +177,25 @@ int main(int argc,char* argv[])
 #ifdef APP
 	printf("[log] valid segment found for seq no: %d\n", RN * MSS);
 #endif
-#ifdef DROP
-	if(packetCount % probLoss != 0 || packetCount == 0)
-	{
+			if(!canDrop(packetCount, probLoss))
+			{
 #ifdef DELAY
 	//sleep(1);
 #endif
+				removeHeader(request);
 
-#endif
-			removeHeader(request);
+				//storeSegment(request);
 
-			//storeSegment(request);
-
-			sendAck(sock, req_from, in_port);
+				sendAck(sock, req_from, in_port);
 			
-			writeToFile(file, request, bytesRead - HEADSIZE);
+				writeToFile(file, request, bytesRead - HEADSIZE);
 
-			SLIDE_WIN();
-#ifdef DROP
-	}
-	else
-	{
-		printf("[drop log]\n-------------- dropping packet: %dat seq no: %d\n---------------\n", packetCount, RN * MSS);
-	}
-#endif
+				SLIDE_WIN();
+			}
+			else
+			{
+				printf("Packet loss, sequence number = %d\n", RN * MSS);
+			}
 		}// isValid() if	
 		else
 		{
@@ -216,6 +213,11 @@ int main(int argc,char* argv[])
 	close(file);
 
 	return 0;
+}
+
+bool canDrop(int packetId, int probLoss)
+{
+	return (packetId % probLoss == 0 && packetId != 0);
 }
 
 int isValid(uchar *segment)
