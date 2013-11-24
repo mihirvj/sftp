@@ -9,21 +9,23 @@
 #include "config.h"
 #include<pthread.h>
 #include "fops/fileop.h"
+#include<stdbool.h>
 
 //#define SERVER_ADDR "127.0.0.1"
 //#define SERVER_PORT 7735
 #define CLIENT_PORT 12001
-#define TIMEOUT 2
+#define TIMEOUT 3
 
 #define EXPAND_WIN() SN = (SN + 1) % WINSIZE
 #define SLIDE_WIN() SF = (SF + 1) % WINSIZE; \
-		AN = (AN + MSS) % (WINSIZE * MSS)
+		AN = (AN + MSS)
+#define IS_WIN_FULL() ((SN - SF) == -1)
 
-
-uint SF = 0; // first outstanding frame index
-uint SN = 0; // next frame to be sent
+int SF = 0; // first outstanding frame index
+int SN = 0; // next frame to be sent
 uint AN = 0; // next frame to be acknowledged
 uchar *buffer;
+bool fileEnded = false;
 
 char *SERVER_ADDR;
 int SERVER_PORT;
@@ -92,8 +94,6 @@ usint cal_checksum(char *buf,int length)
 
 		buf[length]=0;
 		length++;
-	
-	
 	}
 
 	for(i=HEADSIZE;i<MSS;i=i+2)
@@ -238,7 +238,7 @@ int main(int argc,char* argv[])
 			break;
 		}
 
-		while((SN - SF) >= WINSIZE) // wait while window iss full
+		while(IS_WIN_FULL()) // wait while window is full
 		{
 #ifdef APP
 	printf("[log] Win size full.. waiting\n");
@@ -269,7 +269,7 @@ int main(int argc,char* argv[])
 		sleep(1);
 	}
 #endif 
-			seqNo = (seqNo + MSS) % BUFSIZE;
+			seqNo = (seqNo + MSS);
 			curIndex = 0;
 
 			memset(segment, '\0', MSS);
@@ -281,6 +281,8 @@ int main(int argc,char* argv[])
 	printf("[log] cur index: %d\n", curIndex);
 #endif
 	}
+
+	fileEnded = true;
 
 	pthread_join(threads, NULL);
 
@@ -306,7 +308,7 @@ void *listener(void *arg)
 	{
 		bytesRead = read_from(sock, response, HEADSIZE, &serverCon);
 
-		if((SN - SF) <= 0)
+		if(IS_WIN_FULL() || fileEnded)
 			pthread_exit(NULL); // termintate if window is full
 
 		// timeout after TIMEOUT seconds
@@ -363,24 +365,26 @@ int isValid(uchar segment[HEADSIZE])
 void goBackN(int sock)
 {
 	int prevIndex = 0;
-	int count = SF;
+	int count = SF, win = SF;
 	uchar segment[MSS];
 
-	for(count = SF * MSS; count <= SN * MSS; count++)
+	for(win = SF; win != SN; win = (win + 1) % WINSIZE)
 	{
-		if(prevIndex == 0 && count > SF) // do not consider first 
+		prevIndex = 0;
+
+		for(count = win * MSS; prevIndex < MSS; count++)
 		{
-			sendSegment(sock, segment, MSS);
+			segment[prevIndex] = buffer[count];
+		
+			prevIndex = (prevIndex + 1);
+		}
+
+		sendSegment(sock, segment, MSS);
 #ifdef APP
 	printf("[log gobackn] sending segment: %s\n", segment);
 #endif
 
-			memset(segment, 0, MSS);
-		}
-
-		segment[prevIndex] = buffer[count];
-		
-		prevIndex = (prevIndex + 1) % MSS;
+		memset(segment, 0, MSS);
 	}
 
 }

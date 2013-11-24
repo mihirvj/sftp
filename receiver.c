@@ -10,7 +10,7 @@
 #include "fops/fileop.h"
 
 //#define SERVER_PORT 7735
-#define SLIDE_WIN() RN = (RN + 1) % WINSIZE
+#define SLIDE_WIN() RN = (RN + 1)
 
 uint RN; // receiver window variable
 char *buffer;
@@ -176,13 +176,16 @@ int main(int argc,char* argv[])
 	printf("[log] valid segment found for seq no: %d\n", RN * MSS);
 #endif
 #ifdef DROP
-	if(packetCount % probLoss != 0 && packetCount != 0)
+	if(packetCount % probLoss != 0 || packetCount == 0)
 	{
-		sleep(2);
+#ifdef DELAY
+	//sleep(1);
+#endif
+
 #endif
 			removeHeader(request);
 
-			storeSegment(request);
+			//storeSegment(request);
 
 			sendAck(sock, req_from, in_port);
 			
@@ -196,7 +199,7 @@ int main(int argc,char* argv[])
 		printf("[drop log]\n-------------- dropping packet: %dat seq no: %d\n---------------\n", packetCount, RN * MSS);
 	}
 #endif
-		}	
+		}// isValid() if	
 		else
 		{
 #ifdef APP
