@@ -28,12 +28,10 @@ uchar *buffer;
 char *SERVER_ADDR;
 int SERVER_PORT;
 char *FILE_NAME;
-int WINSIZE;
-int MSS;
 
-usint cal_checksum(char buf[MSS],int length);
+usint cal_checksum(char *buf,int length);
 
-void attachHeader(uchar segment[MSS], uint seq)
+void attachHeader(uchar *segment, uint seq)
 {	
 	int i;
 	usint checksum;
@@ -77,24 +75,23 @@ void attachHeader(uchar segment[MSS], uint seq)
 #endif
 }
 
-usint cal_checksum(char buf[MSS],int length)
+usint cal_checksum(char *buf,int length)
 {
-uint sum=0;
-usint checksum=0;
-usint word=0;
-int i;
 
-
+	uint sum=0;
+	usint checksum=0;
+	usint word=0;
+	int i;
 
 	printf("length is:%d",length);
 	if(length%2!=0)
 	{
-	#ifdef log
+#ifdef GRAN1
 	printf("padding is required\n");	
-	#endif
+#endif
 
-	buf[length]=0;
-	length++;
+		buf[length]=0;
+		length++;
 	
 	
 	}
@@ -102,42 +99,39 @@ int i;
 	for(i=HEADSIZE;i<MSS;i=i+2)
 	{
 	
-	word=buf[i];
-	word=(word<<8)+(buf[i+1]&0xFF);
-	sum=sum+word;
-	
+		word=buf[i];
+		word=(word<<8)+(buf[i+1]&0xFF);
+		sum=sum+word;
 	}
-
-	
-	
-
-		
 
 	while(sum>>16)
 	{
 
-	sum= (sum&0XFFFF)+(sum>>16);	
+		sum= (sum&0XFFFF)+(sum>>16);	
 	
-	#ifdef log
+#ifdef GRAN1
 	printf("Adding Carry");
-	#endif
+#endif
 
 	}
-
-	
-
 	
 	sum=~sum;
+
+#ifdef GRAN1
 	printf("your checksum is:%x\n",sum);
+#endif
+
 	checksum=(usint)sum;
+
+#ifdef GRAN1
 	printf("your final checksum is:%x\n",checksum);
+#endif
+
 	return checksum;
 	
 }
 
-
-
-void storeSegment(uchar segment[MSS])
+void storeSegment(uchar *segment)
 {
 	int i;
 	uint bufSize = WINSIZE * MSS * 2;
@@ -148,29 +142,11 @@ void storeSegment(uchar segment[MSS])
 	}
 }
 
-void sendSegment(int sock, uchar segment[MSS], int buf_len)
+void sendSegment(int sock, uchar *segment, int buf_len)
 {
 	segment[buf_len] = '\0';
 
 	write_to(sock, segment, buf_len, SERVER_ADDR, SERVER_PORT);
-}
-
-void resetOutstandingPtr()
-{
-	uint seq;
-	
-	seq = (uint) buffer[SF];
-	seq = seq << 24;
-
-	seq = seq + (((uint) buffer[SF + 1]) << 16);
-	seq = seq + (((uint) buffer[SF + 2]) << 8);
-	seq = seq + ((uint) buffer[SF + 3]);
-
-	AN = seq;
-
-#ifdef APP
-	printf("[log] reset AN to: %d\n", AN);
-#endif
 }
 
 void *listener(void *arg);
@@ -186,46 +162,50 @@ uint seqNo = 0;
 
 int main(int argc,char* argv[])
 {
-	if(argc!=6)
+	int sock;
+	uchar response[HEADSIZE], nextChar, *segment;
+	int file, i;
+	int BUFSIZE, curIndex = 0;
+
+	if(argc < 6)
 	{
-	printf("Wrong Number Argument");
-	return 1;
+		printf("[usage] ./sender <server_addr> <server_port> <file_name> <win_size> <MSS>\n");
+		return 1;
 	}	
 	
-	SERVER_ADDR=argv[1];
-	SERVER_PORT=atoi(argv[2]);
-	FILE_NAME=argv[3];
-	WINSIZE=atoi(argv[4]);
-	MSS=atoi(argv[5])+HEADSIZE;
+	SERVER_ADDR = argv[1];
+	SERVER_PORT = atoi(argv[2]);
+	FILE_NAME = argv[3];
+	WINSIZE = atoi(argv[4]);
+	MSS = atoi(argv[5]);
 
-	int sock;
-	uchar response[HEADSIZE], nextChar, segment[MSS];
-	int file, i;
-	int BUFSIZE = WINSIZE * MSS, curIndex = 0;
-
-#ifdef APP
-	int debug = 0;
-#endif	
 
 	//	|_|_|(|_|_|_|_|_|_|_|)|_|_|
 	//	      SF    WINDOW    SN
 
 	/******************* Initialization ************/
 	// buffer is a data structure over which window moves
-	buffer = (char *) malloc(WINSIZE * MSS * 2);
+	buffer = (char *) malloc(WINSIZE * (MSS + HEADSIZE) * 2);
+	segment = (char *) malloc(MSS + HEADSIZE);
 
 	SF = 0;
 	SN = 0;
+	BUFSIZE = WINSIZE * MSS;
 
 	sock = get_sock();
 
 	bind_sock(sock, CLIENT_PORT, TIMEOUT); // seconds timeout
 
-
-
 	file = get_file_descriptor(FILE_NAME, Read);
-	
+
+	/****************** Establish parameters with receiver ************/
+
+        write_to(sock, argv[4], strlen(argv[4]), SERVER_ADDR, SERVER_PORT); // send WINSIZE
+        write_to(sock, argv[5], strlen(argv[5]), SERVER_ADDR, SERVER_PORT); // send MSS
+
 	/***************** Go back N Algorithm **********/
+
+	MSS = MSS + HEADSIZE;
 
 	// start a listener thread
 	pthread_mutex_init(&mutex, NULL);
@@ -287,7 +267,6 @@ int main(int argc,char* argv[])
 	//if(seqNo > 1000)// || debug == 1)
 	{
 		sleep(1);
-		debug = 1;
 	}
 #endif 
 			seqNo = (seqNo + MSS) % BUFSIZE;
@@ -386,8 +365,6 @@ void goBackN(int sock)
 	int prevIndex = 0;
 	int count = SF;
 	uchar segment[MSS];
-
-	//resetOutstandingPtr();
 
 	for(count = SF * MSS; count <= SN * MSS; count++)
 	{

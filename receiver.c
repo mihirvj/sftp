@@ -9,24 +9,16 @@
 #include "config.h"
 #include "fops/fileop.h"
 
-#define SERVER_PORT 7735
+//#define SERVER_PORT 7735
 #define SLIDE_WIN() RN = (RN + 1) % WINSIZE
-
-int WINSIZE;
-int MSS;
-char* FILE_NAME;
 
 uint RN; // receiver window variable
 char *buffer;
 
+int isValid(uchar *segment);
+usint cal_checksum(uchar *buf,int length);
 
-
-
-
-int isValid(uchar segment[MSS]);
-usint cal_checksum(char buf[MSS],int length);
-
-void removeHeader(uchar segment[MSS])
+void removeHeader(uchar *segment)
 {
 	int i;
 
@@ -36,7 +28,7 @@ void removeHeader(uchar segment[MSS])
 	segment[i] = '\0';
 }
 
-void storeSegment(uchar segment[MSS])
+void storeSegment(uchar *segment)
 {
 	int i;
 	uint bufSize = WINSIZE * MSS * 2;
@@ -62,9 +54,6 @@ void sendAck(int sock, char senderIP[50], int senderPort)
 	segment[1] = (ackNo >> 16) & 0xFF;
 	segment[0] = (ackNo >> 24) & 0xFF;
 
-	
-	
-	
 #ifdef APP
 	printf("[log] ack sent for %d:\n", ackNo);
 
@@ -98,25 +87,25 @@ void writeToFile(int file, uchar segment[MSS], int buf_len)
 
 int main(int argc,char* argv[])
 {
-	if(argc!=4)
-	{
-	printf("Wrong Number Argument");
-	return 1;
-	}	
-	
-
-	
-	FILE_NAME=argv[1];	
-	WINSIZE=atoi(argv[2]);
-	MSS=atoi(argv[3])+HEADSIZE;	
-
-
-
 	int sock, in_port;
-	uchar request[MSS], req_from[50];
+	uchar *request, req_from[50], initParam[10];
 	struct sockaddr_in clientCon;
 	char ack[HEADSIZE];
 	int file, i, bytesRead, packetCount = 0;
+
+	char *fileName;
+        int SERVER_PORT;
+        int probLoss;
+
+	if(argc < 4)
+        {
+                printf("[usage] ./receiver <server_port> <file_name> <probability>\n");
+                return 1;
+        }
+		
+	SERVER_PORT = atoi(argv[1]);
+	fileName = argv[2];	
+	probLoss = atoi(argv[3]);
 
 /*
 	|_|_|_(|_|)_|_|_|_|
@@ -125,16 +114,29 @@ int main(int argc,char* argv[])
 
 	RN = 0;
 	
-	buffer = (char *) malloc(WINSIZE * MSS * 2);
-
 	sock = get_sock();
 
-
-	file = get_file_descriptor(FILE_NAME, Create);
+	file = get_file_descriptor(fileName, Create);
 
 	bind_sock(sock, SERVER_PORT);
 
 	listen_sock(sock);
+
+	/**************** Establish params from sender **************/
+
+        read_from(sock, initParam, 10, &clientCon); // read WINSIZE
+        WINSIZE = atoi(initParam);
+
+        read_from(sock, initParam, 10, &clientCon); // read MSS
+        MSS = atoi(initParam) + HEADSIZE;
+
+#ifdef APP
+        printf("[log] params set: winsize = %d, mss = %d\n", WINSIZE, MSS);
+#endif
+
+
+	buffer = (char *) malloc(WINSIZE * MSS * 2);
+	request = (char *) malloc(MSS);
 
 	while(1) // listen continuosly
 	{
@@ -174,7 +176,7 @@ int main(int argc,char* argv[])
 	printf("[log] valid segment found for seq no: %d\n", RN * MSS);
 #endif
 #ifdef DROP
-	if(packetCount % 3 != 0 && packetCount != 0)
+	if(packetCount % probLoss != 0 && packetCount != 0)
 	{
 		sleep(2);
 #endif
@@ -213,7 +215,7 @@ int main(int argc,char* argv[])
 	return 0;
 }
 
-int isValid(uchar segment[MSS])
+int isValid(uchar *segment)
 {
 	usint r_checksum;
 	usint c_checksum;	
@@ -231,69 +233,77 @@ int isValid(uchar segment[MSS])
 #endif
 	c_checksum = cal_checksum(segment,MSS-HEADSIZE)&0xFFFF;
 
+#ifdef APP
 	printf("\n----->calculated checksum:%x",c_checksum);
+#endif
 
 	r_checksum = segment[4];
 	r_checksum=(segment[4]<<8)+(segment[5]&0xFF);
-	
+
+#ifdef APP	
 	printf("\n----->Recieved checksum:%x\n",r_checksum);
-	
+#endif
+
+#ifdef APP
 	//just for testing purpose
 	if( r_checksum == c_checksum){printf("checksum are equal\n");}
 	else{printf("OOPS..checksum are not equal\n");}
-
-
+#endif
 
 	return (seqNo == (RN * MSS)) && (r_checksum == c_checksum);
 }
 
-usint cal_checksum(char buf[MSS],int length)
+usint cal_checksum(uchar *buf,int length)
 {
-uint sum=0;
-usint checksum=0;
-usint word=0;
-int i;
+	uint sum=0;
+	usint checksum=0;
+	usint word=0;
+	int i;
 
-
-
+#ifdef GRAN1
 	printf("length is:%d",length);
+#endif
+
 	if(length%2!=0)
 	{
-	#ifdef log
-	printf("padding is required\n");	
-	#endif
+#ifdef GRAN1
+		printf("padding is required\n");	
+#endif
 
-	buf[length]=0;
-	length++;
-	
+		buf[length]=0;
+		length++;
 	}
 
-	for(i=HEADSIZE;i<MSS;i=i+2)
+	for(i = HEADSIZE; i < MSS; i = i+2)
 	{
-	
-	word=buf[i];
-	word=(word<<8)+(buf[i+1]&0xFF);
-	sum=sum+word;
-	
-	}
+		word=buf[i];
 
+		word = (word << 8) + (buf[i+1] & 0xFF);
+
+		sum = sum + word;
+	}
 
 	while(sum>>16)
 	{
 
-	sum= (sum&0XFFFF)+(sum>>16);	
+		sum= (sum&0XFFFF)+(sum>>16);	
 	
-	#ifdef log
+#ifdef GRAN1
 	printf("Adding Carry");
-	#endif
-
+#endif
 	}
 	
 	sum=~sum;
-	printf("your checksum is:%x\n",sum);
-	checksum=(usint)sum;
-	printf("your final checksum is:%x\n",checksum);
-	return checksum;
-	
-}
 
+#ifdef GRAN1
+	printf("your checksum is:%x\n",sum);
+#endif
+
+	checksum=(usint)sum;
+
+#ifdef GRAN1
+	printf("your final checksum is:%x\n",checksum);
+#endif
+
+	return checksum;	
+}
