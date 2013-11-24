@@ -20,16 +20,17 @@
 #define SLIDE_WIN() SF = (SF + 1) % WINSIZE; \
 		AN = (AN + MSS)
 #define IS_WIN_FULL() ((SN - SF) == -1)
+#define CAN_STOP_LISTENING() ((SN - SF) == 0 && fileEnded)
 
 int SF = 0; // first outstanding frame index
 int SN = 0; // next frame to be sent
 uint AN = 0; // next frame to be acknowledged
 uchar *buffer;
-bool fileEnded = false;
 
 char *SERVER_ADDR;
 int SERVER_PORT;
 char *FILE_NAME;
+bool fileEnded = false;
 
 usint cal_checksum(char *buf,int length);
 
@@ -308,7 +309,7 @@ void *listener(void *arg)
 	{
 		bytesRead = read_from(sock, response, HEADSIZE, &serverCon);
 
-		if(IS_WIN_FULL() || fileEnded)
+		if(CAN_STOP_LISTENING())
 			pthread_exit(NULL); // termintate if window is full
 
 		// timeout after TIMEOUT seconds
