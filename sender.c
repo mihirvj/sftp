@@ -16,16 +16,17 @@
 #define CLIENT_PORT 12001
 #define TIMEOUT 3
 
-#define EXPAND_WIN() SN = (SN + 1) % WINSIZE
-#define SLIDE_WIN() SF = (SF + 1) % WINSIZE; \
+#define EXPAND_WIN() SN = (SN + 1) % VWIN
+#define SLIDE_WIN() SF = (SF + 1) % VWIN; \
 		AN = (AN + MSS)
-#define IS_WIN_FULL() ((SN - SF) == -1)
-#define CAN_STOP_LISTENING() ((SN - SF) == 0 && fileEnded)
+#define IS_WIN_FULL() (((SN + 1) % VWIN) == SF)
+#define CAN_STOP_LISTENING() (fileEnded && (SN - SF) == 0)
 
 int SF = 0; // first outstanding frame index
 int SN = 0; // next frame to be sent
 uint AN = 0; // next frame to be acknowledged
 uchar *buffer;
+uint VWIN = 0;
 
 char *SERVER_ADDR;
 int SERVER_PORT;
@@ -217,6 +218,8 @@ int main(int argc,char* argv[])
 
 	memset(segment, '\0', MSS);
 
+	VWIN = WINSIZE + 1;
+
 	while(1)
 	{
 		nextChar = rdt_send(file); // read next char
@@ -248,7 +251,7 @@ int main(int argc,char* argv[])
 	printf("[log] Win size full.. waiting\n");
 	printWinStats();
 #endif
-			sleep(2);
+			sleep(1);
 		}
 
 		segment[curIndex] = (int) nextChar; // add to buffer
@@ -268,10 +271,9 @@ int main(int argc,char* argv[])
 			printWinStats();
 
 #ifdef DELAY
-	//if(seqNo > 1000)// || debug == 1)
-	{
-		sleep(1);
-	}
+	sleep(1);
+#else
+	usleep(10);
 #endif 
 			seqNo = (seqNo + MSS);
 			curIndex = 0;
@@ -313,13 +315,19 @@ void *listener(void *arg)
 		bytesRead = read_from(sock, response, HEADSIZE, &serverCon);
 
 		if(CAN_STOP_LISTENING())
+		{
+#ifdef APP
+	printf("\nENDING LISTENER THREAD\n");
+	exit(0);
+#endif
 			pthread_exit(NULL); // termintate if window is full
+		}
 
 		// timeout after TIMEOUT seconds
 		if(bytesRead < 0)
 		{
 
-			printf("timer expired for sequence number: %d\n", AN);
+			printf("Timeout, sequence number = %d\n", AN);
 
 			pthread_mutex_lock(&mutex);	
 			goBackN(sock);
@@ -372,7 +380,7 @@ void goBackN(int sock)
 	int count = SF, win = SF;
 	uchar segment[MSS];
 
-	for(win = SF; win != SN; win = (win + 1) % WINSIZE)
+	for(win = SF; win != SN; win = (win + 1) % VWIN)
 	{
 		prevIndex = 0;
 

@@ -9,6 +9,7 @@
 #include "config.h"
 #include "fops/fileop.h"
 #include<stdbool.h>
+#include<sys/time.h>
 
 //#define SERVER_PORT 7735
 #define SLIDE_WIN() RN = (RN + 1)
@@ -18,7 +19,7 @@ char *buffer;
 
 int isValid(uchar *segment);
 usint cal_checksum(uchar *buf,int length);
-bool canDrop(int packetId, int probLoss);
+bool canDrop(double probLoss);
 
 void removeHeader(uchar *segment)
 {
@@ -97,7 +98,9 @@ int main(int argc,char* argv[])
 
 	char *fileName;
         int SERVER_PORT;
-        int probLoss;
+        double probLoss;
+
+	uint lastPacketLost = 0;
 
 	if(argc < 4)
         {
@@ -107,7 +110,9 @@ int main(int argc,char* argv[])
 		
 	SERVER_PORT = atoi(argv[1]);
 	fileName = argv[2];	
-	probLoss = atoi(argv[3]);
+	probLoss = atof(argv[3]);
+
+	srand(time(NULL));
 
 /*
 	|_|_|_(|_|)_|_|_|_|
@@ -177,10 +182,12 @@ int main(int argc,char* argv[])
 #ifdef APP
 	printf("[log] valid segment found for seq no: %d\n", RN * MSS);
 #endif
-			if(!canDrop(packetCount, probLoss))
+			if(!canDrop(probLoss) || lastPacketLost == RN * MSS)
 			{
 #ifdef DELAY
-	//sleep(1);
+	sleep(1);
+#else
+	usleep(10);
 #endif
 				removeHeader(request);
 
@@ -189,6 +196,8 @@ int main(int argc,char* argv[])
 				sendAck(sock, req_from, in_port);
 			
 				writeToFile(file, request, bytesRead - HEADSIZE);
+
+				lastPacketLost = RN * MSS;
 
 				SLIDE_WIN();
 			}
@@ -215,9 +224,9 @@ int main(int argc,char* argv[])
 	return 0;
 }
 
-bool canDrop(int packetId, int probLoss)
+bool canDrop(double probLoss)
 {
-	return (packetId % probLoss == 0 && packetId != 0);
+	return (((double)rand() / (double)RAND_MAX ) <= probLoss) ;
 }
 
 int isValid(uchar *segment)

@@ -1,0 +1,455 @@
+VARYING WIN SIZE:
+
+exec/receiver 7735 test/received.txt 0.05
+exec/sender 127.0.0.1 7735 test/sending.txt 1 504
+real	26m46.678s
+user	0m0.324s
+sys	0m1.340s
+
+real	28m17.450s
+user	0m0.376s
+sys	0m1.116s
+
+-------------------------------------------------------------
+
+exec/receiver 7735 test/received.txt 0.05
+exec/sender 127.0.0.1 7735 test/sending.txt 2 504
+real	1m54.303s
+user	0m0.220s
+sys	0m0.796s
+
+real	2m5.394s
+user	0m0.232s
+sys	0m0.976s
+
+------------------------------------------------------------
+
+exec/receiver 7735 test/received.txt 0.05
+exec/sender 127.0.0.1 7735 test/sending.txt 4 504
+
+real	12m57.339s
+user	0m0.316s
+sys	0m0.844s
+
+real	0m7.072s
+user	0m0.216s
+sys	0m0.652s
+
+------------------------------------------------------------
+
+exec/receiver 7735 test/received.txt 0.05
+exec/sender 127.0.0.1 7735 test/sending.txt 8 504
+
+real	8m47.185s
+user	0m0.308s
+sys	0m0.784s
+
+real	9m44.238s
+user	0m0.288s
+sys	0m0.852s
+
+------------------------------------------------------------
+
+exec/receiver 7735 test/received.txt 0.05
+exec/sender 127.0.0.1 7735 test/sending.txt 16 504
+
+real	6m46.238s
+user	0m0.360s
+sys	0m0.804s
+
+real	6m0.158s
+user	0m0.256s
+sys	0m0.820s
+
+------------------------------------------------------------
+
+exec/receiver 7735 test/received.txt 0.05
+exec/sender 127.0.0.1 7735 test/sending.txt 32 504
+
+real	5m19.825s
+user	0m0.300s
+sys	0m0.804s
+
+real	6m9.568s
+user	0m0.276s
+sys	0m0.888s
+
+------------------------------------------------------------
+
+exec/receiver 7735 test/received.txt 0.05
+exec/sender 127.0.0.1 7735 test/sending.txt 64 504
+real	1m19.143s
+user	0m0.224s
+sys	0m0.644s
+
+real	1m7.181s (hanged once)
+user	0m0.244s
+sys	0m0.732s
+
+real	1m24.073s (hanged twice)
+user	0m0.212s
+sys	0m0.712s
+------------------------------------------------------------
+
+exec/receiver 7735 test/received.txt 0.05
+exec/sender 127.0.0.1 7735 test/sending.txt 128 504
+real	0m11.007s
+user	0m0.160s
+sys	0m0.868s
+
+real	0m1.973s
+user	0m0.164s
+sys	0m0.636s
+
+------------------------------------------------------------
+
+exec/receiver 7735 test/received.txt 0.05
+exec/sender 127.0.0.1 7735 test/sending.txt 256 504
+real	0m9.044s
+user	0m0.200s
+sys	0m0.864s
+
+real	0m1.856s
+user	0m0.168s
+sys	0m0.552s
+
+------------------------------------------------------------
+
+exec/receiver 7735 test/received.txt 0.05
+exec/sender 127.0.0.1 7735 test/sending.txt 512 504
+real	0m10.942s
+user	0m0.196s
+sys	0m0.992s
+
+real	0m1.573s
+user	0m0.116s
+sys	0m0.312s
+
+------------------------------------------------------------
+
+exec/receiver 7735 test/received.txt 0.05
+exec/sender 127.0.0.1 7735 test/sending.txt 1024 504
+real	0m6.836s
+user	0m0.260s
+sys	0m0.860s
+
+real	0m1.643s
+user	0m0.116s
+sys	0m0.356s
+
+------------------------------------------------------------
+------------------------------------------------------------
+
+VARYING MSS:
+
+exec/receiver 7735 test/received.txt 0.05
+exec/sender 127.0.0.1 7735 test/sending.txt 64 100
+
+real	2m38.997s
+user	0m0.252s
+sys	0m1.120s
+
+real	2m39.139s
+user	0m0.312s
+sys	0m1.092s
+
+real	2m39.015s
+user	0m0.384s
+sys	0m0.976s
+
+------------------------------------------------------------
+exec/receiver 7735 test/received.txt 0.05
+exec/sender 127.0.0.1 7735 test/sending.txt 64 200
+
+real	1m20.435s
+user	0m0.316s
+sys	0m0.784s
+
+real	1m20.536s
+user	0m0.232s
+sys	0m0.876s
+
+real	1m20.492s
+user	0m0.244s
+sys	0m0.844s
+
+------------------------------------------------------------
+exec/receiver 7735 test/received.txt 0.05
+exec/sender 127.0.0.1 7735 test/sending.txt 64 300
+
+real	0m54.369s
+user	0m0.216s
+sys	0m0.800s
+
+real	0m54.317s
+user	0m0.184s
+sys	0m0.872s
+
+real	1m23.238s
+user	0m0.236s
+sys	0m0.772s
+
+------------------------------------------------------------
+exec/receiver 7735 test/received.txt 0.05
+exec/sender 127.0.0.1 7735 test/sending.txt 64 400
+
+real	0m41.252s
+user	0m0.208s
+sys	0m0.728s
+
+real	0m41.320s
+user	0m0.248s
+sys	0m0.728s
+
+real	0m41.133s
+user	0m0.236s
+sys	0m0.716s
+
+------------------------------------------------------------
+exec/receiver 7735 test/received.txt 0.05
+exec/sender 127.0.0.1 7735 test/sending.txt 64 500
+
+real	0m33.119s
+user	0m0.260s
+sys	0m0.684s
+
+real	0m33.144s
+user	0m0.244s
+sys	0m0.700s
+
+real	0m33.184s
+user	0m0.200s
+sys	0m0.712s
+------------------------------------------------------------
+exec/receiver 7735 test/received.txt 0.05
+exec/sender 127.0.0.1 7735 test/sending.txt 64 600
+
+real	0m29.104s
+user	0m0.204s
+sys	0m0.728s
+
+real	0m28.125s
+user	0m0.212s
+sys	0m0.700s
+
+real	0m28.064s
+user	0m0.232s
+sys	0m0.692s
+------------------------------------------------------------
+exec/receiver 7735 test/received.txt 0.05
+exec/sender 152.1.247.164 65499 test/sending.txt 64 700
+
+real	0m24.017s
+user	0m0.200s
+sys	0m0.644s
+
+real	0m24.014s
+user	0m0.244s
+sys	0m0.584s
+
+real	0m24.036s
+user	0m0.160s
+sys	0m0.728s
+-----------------------------------------------------------
+exec/receiver 7735 test/received.txt 0.05
+exec/sender 152.1.247.164 65499 test/sending.txt 64 800
+
+real	0m21.127s
+user	0m0.236s
+sys	0m0.620s
+
+real	0m21.060s
+user	0m0.232s
+sys	0m0.636s
+
+real	0m20.988s
+user	0m0.148s
+sys	0m0.592s
+-----------------------------------------------------------
+exec/receiver 7735 test/received.txt 0.05
+exec/sender 152.1.247.164 65499 test/sending.txt 64 900
+
+real	0m18.963s
+user	0m0.184s
+sys	0m0.584s
+
+real	0m19.046s
+user	0m0.256s
+sys	0m0.628s
+
+real	0m18.387s
+user	0m0.224s
+sys	0m0.700s
+-----------------------------------------------------------
+exec/receiver 7735 test/received.txt 0.05
+exec/sender 152.1.247.164 65499 test/sending.txt 64 1000
+
+real	0m17.184s
+user	0m0.216s
+sys	0m0.660s
+
+real	0m17.021s
+user	0m0.208s
+sys	0m0.712s
+
+real	0m17.138s
+user	0m0.268s
+sys	0m0.580s
+
+----------------------------------------------------------
+----------------------------------------------------------
+VARYING PROBABILITY:
+
+exec/receiver 7735 test/received.txt 0.01
+exec/sender 152.1.247.164 65499 test/sending.txt 64 500
+
+real	0m33.117s
+user	0m0.260s
+sys	0m0.684s
+
+real	0m33.106s
+user	0m0.212s
+sys	0m0.744s
+
+real	0m33.133s
+user	0m0.252s
+sys	0m0.728s
+
+---------------------------------------------------------
+exec/receiver 7735 test/received.txt 0.02
+exec/sender 152.1.247.164 65499 test/sending.txt 64 500
+
+real	0m33.113s
+user	0m0.244s
+sys	0m0.696s
+
+real	0m33.248s
+user	0m0.204s
+sys	0m0.724s
+
+real	0m33.211s
+user	0m0.260s
+sys	0m0.688s
+
+--------------------------------------------------------
+exec/receiver 7735 test/received.txt 0.03
+exec/sender 152.1.247.164 65499 test/sending.txt 64 500
+
+real	0m33.261s
+user	0m0.252s
+sys	0m0.696s
+
+real	0m33.218s
+user	0m0.216s
+sys	0m0.720s
+
+real	0m33.096s
+user	0m0.228s
+sys	0m0.712s
+--------------------------------------------------------
+exec/receiver 7735 test/received.txt 0.04
+exec/sender 152.1.247.164 65499 test/sending.txt 64 500
+
+real	0m33.087s
+user	0m0.268s
+sys	0m0.672s
+
+real	0m33.088s
+user	0m0.272s
+sys	0m0.672s
+
+real	0m33.142s
+user	0m0.224s
+sys	0m0.724s
+--------------------------------------------------------
+exec/receiver 7735 test/received.txt 0.05
+exec/sender 152.1.247.164 65499 test/sending.txt 64 500
+
+real	0m33.106s
+user	0m0.228s
+sys	0m0.684s
+
+real	0m32.309s
+user	0m0.208s
+sys	0m0.708s
+
+real	0m33.151s (hanged twice)
+user	0m0.260s
+sys	0m0.652s
+
+--------------------------------------------------------
+exec/receiver 7735 test/received.txt 0.06
+exec/sender 152.1.247.164 65499 test/sending.txt 64 500
+
+real	0m33.168s (hanged once)
+user	0m0.232s
+sys	0m0.720s
+
+real	0m33.088s
+user	0m0.216s
+sys	0m0.708s
+
+real	0m32.985s
+user	0m0.212s
+sys	0m0.616s
+
+--------------------------------------------------------
+exec/receiver 7735 test/received.txt 0.07
+exec/sender 152.1.247.164 65499 test/sending.txt 64 500
+
+real	0m33.053s
+user	0m0.200s
+sys	0m0.680s
+
+real	0m33.037s
+user	0m0.160s
+sys	0m0.720s
+
+real	0m33.050s
+user	0m0.232s
+sys	0m0.644s
+--------------------------------------------------------
+exec/receiver 7735 test/received.txt 0.08
+exec/sender 152.1.247.164 65499 test/sending.txt 64 500
+
+real	0m34.108s
+user	0m0.240s
+sys	0m0.624s
+
+real	0m33.014s
+user	0m0.248s
+sys	0m0.608s
+
+real	0m33.189s
+user	0m0.176s
+sys	0m0.744s
+--------------------------------------------------------
+exec/receiver 7735 test/received.txt 0.09
+exec/sender 152.1.247.164 65499 test/sending.txt 64 500
+
+real	0m33.080s
+user	0m0.200s
+sys	0m0.692s
+
+real	0m33.071s
+user	0m0.200s
+sys	0m0.672s
+
+real	0m34.046s
+user	0m0.208s
+sys	0m0.684s
+--------------------------------------------------------
+exec/receiver 7735 test/received.txt 0.10
+exec/sender 152.1.247.164 65499 test/sending.txt 64 500
+
+real	0m33.079s
+user	0m0.204s
+sys	0m0.712s
+
+real	0m33.065s
+user	0m0.216s
+sys	0m0.680s
+
+real	0m33.070s
+user	0m0.204s
+sys	0m0.696s
