@@ -159,6 +159,21 @@ int isValid(uchar segment[HEADSIZE]);
 void goBackN(int sock);
 void printWinStats();
 
+uint extractSeqNo(uchar segment[HEADSIZE])
+{
+
+	uint ackNo = 0;
+
+	ackNo = (uint) segment[0];
+	ackNo = ackNo << 24;
+
+	ackNo = ackNo + (((uint) segment[1]) << 16);
+	ackNo = ackNo + (((uint) segment[2]) << 8);
+	ackNo = ackNo + ((uint) segment[3]);
+
+	return ackNo;
+}
+
 pthread_attr_t attr;
 pthread_t threads;
 pthread_mutex_t mutex;
@@ -304,9 +319,11 @@ int main(int argc,char* argv[])
 
 void *listener(void *arg)
 {
+	int i;
 	uchar response[HEADSIZE];
 	struct sockaddr_in serverCon;
 	int bytesRead;
+	uint recvAck = 0;
 
 	int sock = * (int *) arg;
 
@@ -337,8 +354,29 @@ void *listener(void *arg)
 		{
 			if(isValid(response)) // check whether correct ack has been received
 			{
+				bool isFirst = true;
+
+				recvAck = extractSeqNo(response);
+
 				// purge frame and slide head pointer
-				SLIDE_WIN();
+				if(recvAck == AN)
+				{
+					SLIDE_WIN();
+				}
+				else if(recvAck > AN)
+				{
+					uint prevAN = AN;
+
+					for(i = 0; i <= ((recvAck - prevAN) / MSS) || isFirst; i++)
+					{
+						SLIDE_WIN();
+
+						if(IS_WIN_FULL())
+							break;
+
+						isFirst = false;
+					}
+				}	
 
 				printWinStats();
 			}
@@ -371,7 +409,7 @@ int isValid(uchar segment[HEADSIZE])
 	printf("[log] received ack for: %d\nexpected: %d\n", ackNo, AN);
 #endif
 
-	return ackNo == AN;
+	return ackNo >= AN;
 }
 
 void goBackN(int sock)
