@@ -8,7 +8,7 @@ REC_OBJ=receiver.o
 EXEC_PATH=exec
 PLIB=-lpthread
 
-FLAGS=-g -Werror #-DAPP #-DDROP #-DDELAY #-DGRAN1
+FLAGS=-g -Werror #-DAPP #-DGRAN1 #-DDROP #-DDELAY #-DGRAN1
 
 all: sender receiver
 	mv sock/*.o sock/objs/
@@ -28,5 +28,5 @@ sender: ${C_OBJS} ${C_HEADERS}
 clean: 
 	rm -f *.o
 	rm -r exec/*
-	cd sock; make clean	
-	rm test/received.txt        
+	rm fops/*.o
+	cd sock; make clean

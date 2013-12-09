@@ -15,7 +15,9 @@
 #define SLIDE_WIN() RN = (RN + 1)
 
 uint RN; // receiver window variable
-char *buffer;
+uchar *buffer;
+
+uint fsize;
 
 int isValid(uchar *segment);
 usint cal_checksum(uchar *buf,int length);
@@ -71,14 +73,15 @@ void sendAck(int sock, char senderIP[50], int senderPort)
 
 void writeToFile(int file, uchar segment[MSS], int buf_len)
 {
-	int i, validCount = 0;
+	int i;
+	int validCount = buf_len;
 
-	for(i=0; i<buf_len; i++)
+	if((RN + 1) * (MSS - HEADSIZE) > fsize) // last chunk
 	{
-		if((int) segment[i] != 0)  //ASK what's this
-			validCount++;
-		else
-			break;
+		validCount = fsize - RN * (MSS - HEADSIZE);
+
+		if(validCount < 0)
+			return;
 	}
 
 #ifdef GRAN1
@@ -137,13 +140,16 @@ int main(int argc,char* argv[])
         read_from(sock, initParam, 10, &clientCon); // read MSS
         MSS = atoi(initParam) + HEADSIZE;
 
+        read_from(sock, initParam, 10, &clientCon); // read file size
+        fsize = atoi(initParam);
+
 #ifdef APP
         printf("[log] params set: winsize = %d, mss = %d\n", WINSIZE, MSS);
 #endif
 
 
-	buffer = (char *) malloc(WINSIZE * MSS * 2);
-	request = (char *) malloc(MSS);
+	buffer = (uchar *) malloc(WINSIZE * MSS * 2);
+	request = (uchar *) malloc(MSS);
 
 	while(1) // listen continuosly
 	{
@@ -264,7 +270,7 @@ int isValid(uchar *segment)
 	else{printf("OOPS..checksum are not equal\n");}
 #endif
 
-	return (seqNo == (RN * MSS)) && (r_checksum == c_checksum);
+	return (seqNo == (RN * MSS));// && (r_checksum == c_checksum);
 }
 
 usint cal_checksum(uchar *buf,int length)

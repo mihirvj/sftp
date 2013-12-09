@@ -149,7 +149,7 @@ void storeSegment(uchar *segment)
 
 void sendSegment(int sock, uchar *segment, int buf_len)
 {
-	segment[buf_len] = '\0';
+	//segment[buf_len] = '\0';
 
 	write_to(sock, segment, buf_len, SERVER_ADDR, SERVER_PORT);
 }
@@ -183,9 +183,10 @@ uint seqNo = 0;
 int main(int argc,char* argv[])
 {
 	int sock;
-	uchar response[HEADSIZE], nextChar, *segment;
+	uchar response[HEADSIZE], nextChar, *segment, fsize[10];
 	int file, i;
 	int BUFSIZE, curIndex = 0;
+	uint dataSent = 0;
 
 	if(argc < 6)
 	{
@@ -235,6 +236,14 @@ int main(int argc,char* argv[])
 
 	VWIN = WINSIZE + 1;
 
+	uint size = lseek(file, 0, SEEK_END); // You should check for an error return in real code
+// Seek back to the beginning.
+	lseek(file, 0, SEEK_SET);
+
+	sprintf(fsize, "%d", size);
+
+        write_to(sock, fsize, 10, SERVER_ADDR, SERVER_PORT); // send MSS
+
 	while(1)
 	{
 		nextChar = rdt_send(file); // read next char
@@ -243,7 +252,7 @@ int main(int argc,char* argv[])
 	printf("[log] reading char: %c\n", nextChar);
 #endif
 
-		if((int) nextChar == 0 && curIndex > 0) // nothing more to read.. phew!
+		if(dataSent > size && curIndex > 0) // nothing more to read.. phew!
 		{
 #ifdef GRAN1
 	printf("\nSending final segment at curIndex = %d\n", curIndex);
@@ -269,7 +278,9 @@ int main(int argc,char* argv[])
 			sleep(1);
 		}
 
-		segment[curIndex] = (int) nextChar; // add to buffer
+		segment[curIndex] = (uint) nextChar; // add to buffer
+
+	//	printf("read char: %c(%d) ", nextChar, (uint) nextChar);
 
 		if((curIndex % (MSS - HEADSIZE - 1)) == 0 && curIndex > 0) // i've got 1 MSS data without header
 		{
@@ -291,9 +302,11 @@ int main(int argc,char* argv[])
 	usleep(10);
 #endif 
 			seqNo = (seqNo + MSS);
+			dataSent = dataSent + MSS - HEADSIZE;
 			curIndex = 0;
 
 			memset(segment, '\0', MSS);
+
 		}
 		else
 			curIndex = curIndex + 1;

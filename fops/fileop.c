@@ -41,7 +41,7 @@ char rdt_send(int fp)
 
 	readBytes = read(fp, buf, BYTES);
 
-	return (readBytes <= 0) ? 0 : (char) buf[0];
+	return (readBytes <= 0) ? -1 : (char) buf[0];
 }
 
 int output_to(int file, char *buffer, int buf_len)
