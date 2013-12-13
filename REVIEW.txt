@@ -1,0 +1,101 @@
+The Makefile is too complex.
+The header file dependencies do not need to be tracked explicitely.
+Instead, compile with -MMD and use
+-include $(OBJS:.o=.d)
+make -s should be very silent.
+All these @echo lines should be removed from the Makefile.
+Make already tells that it was successful by not telling anything and setting the exit status to 0.
+Moving files around in Makefiles is not a good idea because it breaks the dependency check of make.
+The Makefile does not need shell line rules.
+Given a few dependency statements, the implicit rules should be sufficient for a project of that size.
+
+Files that can be generated should not be checked in:
+- tags
+- exec directory
+
+The exec directory should be named bin.
+
+Editor backup files (suffix ~) should not be checked in.
+Prevent further check-ins of editor backup files by maintaining .gitignore file.
+
+The tags file should be generated from make with a target named TAGS.
+
+Source format like this:
+for(i=0;i<MSS-HEADSIZE;i++)
+is pretty unreadable.
+Try a format like this:
+for (i = 0; i < MSS - HEADSIZE; i++)
+You can use indent or astyle to format your source.
+I recommend indent with K&R / 1TBR settings.
+
+The project should be named siftp, not sftp.
+There already is something called sftp.
+And that is secure ftp, not simple ftp.
+The project name was misleading, and I was looking for the crypto code and couldn't find it...
+
+time.out should probably not be checked in.
+
+Object files should not be checked in.
+Add *.o to .gitignore.
+
+Compile with CPPFLAGS:=-std=c99 -W -Wall -pedantic -Werror -g
+
+In fops/fileop.h the enum is declared without name.
+The enum should have a name.
+get_file_descriptor should use the enum, not an int, for the mode parameter.
+Then the compiler can perform type checking on the enum value.
+
+The enum probably isn't even required at all.
+One could directly use mode_t.
+
+get_file_descriptor will not modify the string.
+Thus the type should be const char *.
+All over the program, if strings are passed and they are not modified, they should be passed as const char *, not char *.
+
+Function error() in sock/data.c:
+The exit() code -4249 in error() is strange. It should probably just be 1. Or call abort() instead.
+perror() prints on stderr. The printf("\n") in error() thus should probably be fprintf(stderr, "\n") instead. But why is printing a newline required here anyway?
+
+sock/data.c:
+I'm surprised by the formatting. Parts of the code are indented with tab, parts of the code are indented with 1 space, parts of the code are indented with 2 space. Consistent formatting would be nice, it increases readability.
+
+sock/data.c
+#ifdef GRAN1
+It would be nice if the logging granularity could be chosen at runtime, not just at compile time.
+The UNIX terminology for this is verbosity.
+Logging messages should be printed on stderr, not on stdout. The printf(...) should be replaced with fprintf(stderr, ...).
+#endif
+
+sock/data.c
+I'm surprised that a UDP socket is used. I would expect something like a simple FTP client to use TCP. It seems part of the assignment. It's worth mentioning the intention of using UDP instead of TCP in the source code, when the socket is created, to lessen surprise for the reader.
+
+report_runs.sh
+The shell script uses features not available in bourne shell. It should start with #!/bin/bash.
+The shell script probably came from somewhere. I do not see how it relates to sftp.
+
+The file readings probably is generated.
+Instead of checking in the file readings, the file generating the file readings should be checked in.
+
+receiver.c
+There should be a possibility to trigger the print of a help text, like option -h, --help or so.
+Function main is 137 lines - that's insanely long. It should be split into multiple smaller functions.
+
+#ifdef APP
+Why a different switch than in the other code? Why is it GRAN1 there and APP here?
+Again, logging should be done on stderr, not on stdout.
+And logging should be configurable during runtime, with -v option on the command line.
+
+#ifdef GRAN1
+Oh and here it is again... GRAN1 and APP.
+If you want to be able to log these things independently, prefix the log messages accordingly. Then you can easily filter with grep and you can change what you see in logging without a need to recompile the program.
+
+cal_checksum() The function name should tell which type of checksum it is. Is it a CRC16?
+
+Types uint, uchar, usint - C provides stdint.h, use that instead.
+
+File config.h
+I doubt that the current version compiles, it uses uint before the type uint is defined.
+
+Header files in general, and i.e. sock/data.h
+User header files should only include system header files themselves if the system header files are required by the user header file. If the system header file is only required by the C file, then the C file should include the system header file.
+If you don't follow this rule, you will have problems with the dependencies in your software. Changing dependencies should not have unexpected side effects on include statements, it should be obvious, transparent and straight forward.
